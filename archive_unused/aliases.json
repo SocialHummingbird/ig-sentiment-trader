@@ -1,0 +1,7 @@
+{
+  "AAPL": ["Apple", "Apple Inc"],
+  "TSLA": ["Tesla", "Tesla Inc"],
+  "VOD":  ["Vodafone"],
+  "BP":   ["BP", "BP PLC", "BP p.l.c."],
+  "RIO":  ["Rio Tinto", "Rio Tinto PLC"]
+}

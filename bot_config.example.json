@@ -1,0 +1,34 @@
+{
+  "resolution": "MINUTE_5",
+  "max_candles": 150,
+  "warmup_bars": 20,
+
+  "min_signal_conf": {
+    "rsi_buy_min": 50,
+    "rsi_sell_max": 50
+  },
+
+  "sentiment": {
+    "enabled": true,
+    "model": "gpt-4o-mini",
+    "min_score": 0.15,
+    "timeout_s": 20,
+    "explain_in_log": true
+  },
+
+  "risk_per_trade_gbp": 25,
+  "risk_reward": 2.0,
+  "log_path": ".\\logs\\trade_log.csv",
+
+  "risk_guards": {
+    "count_dry_as_trade": true,
+    "max_trades_per_run": 3,
+    "max_concurrent_positions": 1,
+    "daily_loss_limit_gbp": 50
+  },
+
+  "watchlist": [
+    {"name": "US 500 £1", "epic": "IX.D.SPTRD.IFS.IP", "stop_points": 30},
+    {"name": "Germany 40 £1", "epic": "IX.D.DAX.IFS.IP", "stop_points": 40}
+  ]
+}

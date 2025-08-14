@@ -1,0 +1,22 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# IDE/OS
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Logs & artifacts
+logs/
+**/logs/
+*.log
+
+# Secrets / creds (DO NOT COMMIT)
+login_only/ig_credentials.cfg
+login_only/openai_credentials.cfg
+*.cfg
+
+# Local runtime config (publish an example instead)
+bot_config.json
