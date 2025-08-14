@@ -1,0 +1,118 @@
+﻿IG Sentiment Trader V2  Folder & File Plan
+================================================
+
+Goal
+----
+A clean, modular v2 of the project with < 10 files per folder, easy to drag-and-drop,
+and simple to reason about. This file is the single source of truth describing the layout.
+Use it later to reconstruct the repo quickly.
+
+Top-level (root)
+----------------
+IG-Sentiment-Trader-V2/
+  ├─ README.md               — Overview, quickstart, examples
+  ├─ LICENSE                 — Project license (e.g., MIT)
+  ├─ pyproject.toml          — Build + dependencies (or use requirements.txt)
+   requirements.txt        — (Optional if not using pyproject) runtime deps
+  ├─ .gitignore              — Ignore venv, logs, secrets, etc.
+  ├─ .env.example            — Example environment variables (no secrets)
+   config/                  Public, non-secret config (TOML/YAML)
+   src/                     Application code (packages below)
+   scripts/                 Helper scripts (sanitizers/exporters)
+   tests/                   Unit/integration tests
+   data/                    (git-ignored) runtime artifacts: logs, cache, tmp
+
+NOTE: Keep each folder under 10 files total (files-only, dirs dont count).
+
+config/  (<= 5 files)
+---------------------
+   default.toml             Main runtime config (has comments; safe to commit)
+   logging.toml             Structured logging config (levels, formatters, sinks)
+   credentials.example.toml Sample creds keys (no secrets, shows the shape)
+   watchlist.example.toml   Example instruments+stops for demo
+   README.md                Brief on how to customize and override configs
+
+src/ (packages)
+---------------
+   app/        (<= 6 files)  top-level orchestration & CLI
+       __init__.py
+       cli.py               Entry point: parse args; routes to run_once/scheduler
+       run_once.py          Single-run flow (prices  signal  sentiment  risk  order)
+       scheduler.py         (Optional) loop / cron-friendly runner
+       version.py           Central version string for packaging
+  
+   brokers/    (<= 8 files)  broker abstractions; IG implementation
+       __init__.py
+       base.py              Interfaces: BrokerClient, Order, Market, Candle
+       ig/
+           __init__.py
+           auth.py         Load creds/env; session headers
+           client.py       REST wrapper (login, markets, prices, positions, orders)
+           prices.py       Candle fetching helpers
+           orders.py       Place/confirm/close; dataclass marshaling
+       stub.py              In-memory fake broker for tests
+  
+   signals/    (<= 6 files)  indicators & strategies
+       __init__.py
+       indicators.py        SMA, RSI, ATR, etc. (pure functions)
+       strategies.py        Entry/exit rules (SMA/RSI baseline + variants)
+       backtest.py          (Optional) simple vectorized backtester
+  
+   sentiment/  (<= 6 files)  LLM access + gating
+       __init__.py
+       client.py            Model call; returns {label, score, reason}
+       prompts.py           Prompt templates
+       gate.py              Decision: pass/block with thresholds & labels
+  
+   risk/       (<= 6 files)  guardrails & sizing
+       __init__.py
+       guards.py            preflight/post-size guards (caps, concurrency, P/L)
+       sizing.py            value-per-point, min size/step, stop/limit math
+  
+   io/         (<= 7 files)  logging & persistence utilities
+       __init__.py
+       logs.py              CSV + structured logs; rotate; write summaries
+       storage.py           File I/O helpers (atomic write, safe read)
+       summary.py           End-of-run text/table summaries
+       paths.py             Resolve project paths (root/config/data)
+  
+   utils/      (<= 7 files)  shared helpers
+        __init__.py
+        time.py              UTC timestamps, run_id, trading sessions
+        math.py              snapping, rounding, small numeric helpers
+        types.py             Typed dicts/dataclasses for shared models
+
+scripts/ (<= 6 files)
+---------------------
+   sanitize_logs.py          Strip/compact sensitive blobs before sharing
+   export_summary.py         Aggregate multiple run summaries
+   seed_demo_config.py       Generate default.toml from templates
+
+tests/ (<= 8 files)
+-------------------
+   conftest.py               Pytest fixtures (temp dirs, broker stub)
+   test_indicators.py        Unit tests for indicators
+   test_strategy.py          Signal rules on tiny fixtures
+   test_sentiment_gate.py    Client & gate thresholds
+   test_risk_guards.py       Guard conditions (caps, concurrency, budget)
+   test_run_once.py          End-to-end with broker stub (no network)
+
+data/ (git-ignored)
+-------------------
+   logs/                     CSV and text summaries
+   cache/                    Any local cache (prices, temp artifacts)
+   tmp/                      Scratch directory for runs
+
+Runtime control (how it fits)
+-----------------------------
+- Entry:  `python -m src.app.cli run-once --config config/default.toml [--live]`
+- Flow:   app.run_once  brokers.ig.client/prices  signals.strategies  sentiment.gate
+           risk.guards/sizing  brokers.ig.orders  io.logs/summary
+- Config: Use TOML with comments; secrets are never committed (only credentials.example.toml).
+
+Notes
+-----
+- Keep folders under the 10-file ceiling by merging tiny modules if needed.
+- Prefer pure functions for testability (esp. indicators & strategies).
+- Use `stub.py` for deterministic tests; IG client is covered by a thin IG-only layer.
+- All logging funnels through `io.logs` so CSV + structured outputs stay consistent.
